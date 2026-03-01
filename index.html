@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 SongFetch - Music Search & Stream</title>
+    <meta name="description" content="Search and stream music instantly. Cookie-powered music API.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --card: rgba(255, 255, 255, 0.03);
+            --glass: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.08);
+            --t1: #f0f0f5;
+            --t2: #8888a0;
+            --t3: #55556a;
+            --accent: #8b5cf6;
+            --accent2: #a78bfa;
+            --glow: rgba(139, 92, 246, 0.3);
+            --soft: rgba(139, 92, 246, 0.15);
+            --green: #22c55e;
+            --red: #ef4444;
+            --pink: #ec4899;
+            --cyan: #06b6d4;
+            --orange: #f59e0b;
+            --r: 16px;
+            --rs: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--t1);
+            min-height: 100vh;
+            overflow-x: hidden
+        }
+
+        .bg-fx {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            animation: fl 20s ease-in-out infinite
+        }
+
+        .o1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(139, 92, 246, .12), transparent 70%);
+            top: -200px;
+            left: -100px
+        }
+
+        .o2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(236, 72, 153, .08), transparent 70%);
+            bottom: -200px;
+            right: -100px;
+            animation-delay: -7s
+        }
+
+        .o3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(6, 182, 212, .06), transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s
+        }
+
+        @keyframes fl {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1)
+            }
+
+            25% {
+                transform: translate(50px, -30px) scale(1.05)
+            }
+
+            50% {
+                transform: translate(-30px, 50px) scale(.95)
+            }
+
+            75% {
+                transform: translate(30px, 30px) scale(1.02)
+            }
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px
+        }
+
+        .hdr {
+            text-align: center;
+            padding: 30px 0 20px
+        }
+
+        .logo {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--pink), var(--cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            margin-bottom: 6px
+        }
+
+        .tag {
+            color: var(--t2);
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase
+        }
+
+        /* Cookie Status */
+        .ck-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: var(--rs);
+            padding: 10px 16px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            transition: .3s
+        }
+
+        .ck-bar.ok {
+            border-color: rgba(34, 197, 94, .3);
+            background: rgba(34, 197, 94, .06)
+        }
+
+        .ck-bar.err {
+            border-color: rgba(239, 68, 68, .3);
+            background: rgba(239, 68, 68, .06)
+        }
+
+        .ck-bar.ld {
+            border-color: rgba(245, 158, 11, .3);
+            background: rgba(245, 158, 11, .06)
+        }
+
+        .ck-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            animation: pd 2s infinite
+        }
+
+        .ck-bar.ok .ck-dot {
+            background: var(--green)
+        }
+
+        .ck-bar.err .ck-dot {
+            background: var(--red);
+            animation: none
+        }
+
+        .ck-bar.ld .ck-dot {
+            background: var(--orange)
+        }
+
+        @keyframes pd {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .4
+            }
+        }
+
+        .ck-info {
+            flex: 1
+        }
+
+        .ck-t {
+            font-weight: 600;
+            color: var(--t1)
+        }
+
+        .ck-d {
+            color: var(--t3);
+            font-size: 11px;
+            margin-top: 2px
+        }
+
+        /* Search */
+        .sbox {
+            display: flex;
+            align-items: center;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            overflow: hidden;
+            transition: .3s;
+            margin-bottom: 20px
+        }
+
+        .sbox:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--soft), 0 8px 32px rgba(0, 0, 0, .3)
+        }
+
+        .sbox .si {
+            display: flex;
+            align-items: center;
+            padding: 0 0 0 20px;
+            color: var(--t3)
+        }
+
+        .sbox input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--t1);
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            padding: 18px 16px
+        }
+
+        .sbox input::placeholder {
+            color: var(--t3)
+        }
+
+        .sbtn {
+            background: linear-gradient(135deg, var(--accent), #7c3aed);
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            margin: 6px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: .2s;
+            white-space: nowrap
+        }
+
+        .sbtn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px var(--glow)
+        }
+
+        .sbtn:active {
+            transform: scale(.98)
+        }
+
+        .sbtn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        /* Result Card (single) */
+        .result-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            overflow: hidden;
+            display: none;
+            margin-bottom: 16px;
+            animation: fadeUp .4s ease
+        }
+
+        .result-card.on {
+            display: block
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .rc-top {
+            display: flex;
+            gap: 16px;
+            padding: 16px
+        }
+
+        .rc-art {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .4)
+        }
+
+        .rc-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover
+        }
+
+        .rc-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px
+        }
+
+        .rc-title {
+            font-size: 18px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .rc-artist {
+            font-size: 14px;
+            color: var(--accent2);
+            font-weight: 500
+        }
+
+        .rc-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--t3);
+            flex-wrap: wrap
+        }
+
+        .rc-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .rc-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px
+        }
+
+        .rc-actions button {
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid var(--border);
+            color: var(--t2);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: .2s
+        }
+
+        .rc-actions button:hover {
+            background: var(--soft);
+            color: var(--accent);
+            border-color: rgba(139, 92, 246, .3)
+        }
+
+        .rc-actions .dl-btn {
+            background: linear-gradient(135deg, var(--accent), #7c3aed);
+            color: #fff;
+            border-color: transparent
+        }
+
+        .rc-actions .dl-btn:hover {
+            box-shadow: 0 4px 16px var(--glow);
+            transform: scale(1.02)
+        }
+
+        /* Audio Player */
+        .audio-wrap {
+            padding: 0 16px 16px
+        }
+
+        .audio-player {
+            width: 100%;
+            border-radius: 8px;
+            height: 42px
+        }
+
+        .audio-player::-webkit-media-controls-panel {
+            background: rgba(255, 255, 255, .05)
+        }
+
+        /* Quality Selector */
+        .quality-bar {
+            display: flex;
+            gap: 6px;
+            padding: 0 16px 12px;
+            flex-wrap: wrap
+        }
+
+        .q-chip {
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid var(--border);
+            color: var(--t3);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: .2s;
+            font-family: 'Inter', sans-serif
+        }
+
+        .q-chip:hover,
+        .q-chip.active {
+            background: var(--soft);
+            color: var(--accent);
+            border-color: rgba(139, 92, 246, .3)
+        }
+
+        .empty {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--t3)
+        }
+
+        .empty .ico {
+            font-size: 56px;
+            margin-bottom: 16px
+        }
+
+        .empty h3 {
+            color: var(--t2);
+            font-weight: 600;
+            margin-bottom: 6px
+        }
+
+        .empty p {
+            font-size: 14px
+        }
+
+        .ld-box {
+            display: none;
+            text-align: center;
+            padding: 40px 20px
+        }
+
+        .ld-box.on {
+            display: block
+        }
+
+        .spin {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: sp .7s linear infinite;
+            margin: 0 auto 12px
+        }
+
+        @keyframes sp {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .ld-box p {
+            color: var(--t3);
+            font-size: 13px
+        }
+
+        .err-msg {
+            background: rgba(239, 68, 68, .1);
+            border: 1px solid rgba(239, 68, 68, .2);
+            color: #fca5a5;
+            padding: 12px 16px;
+            border-radius: var(--rs);
+            font-size: 13px;
+            display: none;
+            margin-bottom: 12px
+        }
+
+        .err-msg.on {
+            display: block
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            color: var(--t1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            z-index: 200;
+            opacity: 0;
+            transition: .3s;
+            pointer-events: none
+        }
+
+        .toast.on {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0)
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px
+        }
+
+        @media(max-width:640px) {
+            .wrap {
+                padding: 12px
+            }
+
+            .hdr {
+                padding: 20px 0 14px
+            }
+
+            .logo {
+                font-size: 28px
+            }
+
+            .sbtn {
+                padding: 10px 18px;
+                font-size: 13px
+            }
+
+            .rc-top {
+                flex-direction: column;
+                align-items: center;
+                text-align: center
+            }
+
+            .rc-art {
+                width: 160px;
+                height: 160px
+            }
+
+            .rc-actions {
+                justify-content: center
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-fx">
+        <div class="orb o1"></div>
+        <div class="orb o2"></div>
+        <div class="orb o3"></div>
+    </div>
+    <div class="wrap">
+        <header class="hdr">
+            <div class="logo">SongFetch</div>
+            <div class="tag">Music Search API • Search & Stream</div>
+        </header>
+
+        <div class="ck-bar ld" id="ckBar">
+            <div class="ck-dot"></div>
+            <div class="ck-info">
+                <div class="ck-t">🍪 Loading cookies.txt...</div>
+                <div class="ck-d">Connecting to GitHub repo</div>
+            </div>
+        </div>
+
+        <div class="sbox">
+            <div class="si"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg></div>
+            <input type="text" id="q" placeholder="Search any song, artist, or album..." autocomplete="off">
+            <button class="sbtn" id="go" onclick="doSearch()">Search</button>
+        </div>
+
+        <div class="err-msg" id="err"></div>
+        <div class="ld-box" id="ldBox">
+            <div class="spin"></div>
+            <p>Finding best match...</p>
+        </div>
+
+        <!-- Single Result Card -->
+        <div class="result-card" id="resultCard">
+            <div class="rc-top">
+                <div class="rc-art"><img id="rcImg" src="" alt=""></div>
+                <div class="rc-info">
+                    <div class="rc-title" id="rcTitle">—</div>
+                    <div class="rc-artist" id="rcArtist">—</div>
+                    <div class="rc-meta">
+                        <span id="rcAlbum">📀 —</span>
+                        <span id="rcDur">⏱ —</span>
+                        <span id="rcYear">📅 —</span>
+                        <span id="rcPlays">▶ —</span>
+                    </div>
+                    <div class="rc-actions">
+                        <button class="dl-btn" id="dlBtn" onclick="downloadSong()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            Download 320kbps
+                        </button>
+                        <button onclick="copyLink()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                            </svg>
+                            Copy Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="quality-bar" id="qualityBar"></div>
+            <div class="audio-wrap">
+                <audio class="audio-player" id="player" controls preload="auto"></audio>
+            </div>
+        </div>
+
+        <div class="empty" id="empty">
+            <div class="ico">🎶</div>
+            <h3>Search for Music</h3>
+            <p>Type a song name and press Search — instant result!</p>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ================================================================
+        //  SONGFETCH — JioSaavn API + Cookies.txt
+        //  Fast search, direct 320kbps streaming, no backend needed
+        // ================================================================
+
+        const API_BASE = 'https://jiosaavn-api-privatecvc2.vercel.app';
+
+        const COOKIE_URLS = [
+            'https://raw.githubusercontent.com/evid3008/cookies/main/cookies.txt',
+            'https://evid3008.github.io/cookies/cookies.txt'
+        ];
+
+        let currentSong = null;
+        let ytCookies = [];
+
+        // Init
+        document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+        loadCookies();
+
+        // ===== COOKIES =====
+        async function loadCookies() {
+            setCk('ld', '🍪 Loading cookies.txt...', 'Connecting to GitHub...');
+            for (const url of COOKIE_URLS) {
+                try {
+                    const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+                    if (r.ok) {
+                        const text = await r.text();
+                        if (text.includes('.youtube.com') || text.includes('.google.com')) {
+                            ytCookies = parseCookies(text);
+                            setCk('ok',
+                                `🍪 Connected — ${ytCookies.length} YouTube cookies loaded`,
+                                `Source: ${url.includes('raw.github') ? 'GitHub Raw' : 'GitHub Pages'}`
+                            );
+                            return;
+                        }
+                    }
+                } catch { }
+            }
+            setCk('err', '🍪 cookies.txt not found', 'Add cookies.txt to your repo root');
+        }
+
+        function parseCookies(text) {
+            const out = [];
+            for (const line of text.split('\n')) {
+                const t = line.trim();
+                if (!t || t.startsWith('#')) continue;
+                const p = t.split('\t');
+                if (p.length >= 7 && (p[0].includes('youtube') || p[0].includes('google'))) {
+                    out.push({ domain: p[0], name: p[5], value: p[6] });
+                }
+            }
+            return out;
+        }
+
+        function setCk(type, title, detail) {
+            const el = document.getElementById('ckBar');
+            el.className = 'ck-bar ' + type;
+            el.querySelector('.ck-t').textContent = title;
+            el.querySelector('.ck-d').textContent = detail;
+        }
+
+        // ===== SEARCH =====
+        async function doSearch() {
+            const query = document.getElementById('q').value.trim();
+            if (!query) return;
+
+            document.getElementById('ldBox').classList.add('on');
+            document.getElementById('empty').style.display = 'none';
+            document.getElementById('resultCard').classList.remove('on');
+            document.getElementById('err').classList.remove('on');
+            document.getElementById('go').disabled = true;
+
+            try {
+                const r = await fetch(`${API_BASE}/search/songs?query=${encodeURIComponent(query)}&limit=1`, {
+                    signal: AbortSignal.timeout(5000)
+                });
+                const json = await r.json();
+
+                if (json.status === 'SUCCESS' && json.data?.results?.length > 0) {
+                    showResult(json.data.results[0]);
+                } else {
+                    document.getElementById('empty').innerHTML = '<div class="ico">😔</div><h3>No Results</h3><p>Try different keywords</p>';
+                    document.getElementById('empty').style.display = 'block';
+                }
+            } catch (err) {
+                showErr('Search failed: ' + err.message);
+            } finally {
+                document.getElementById('ldBox').classList.remove('on');
+                document.getElementById('go').disabled = false;
+            }
+        }
+
+        // ===== SHOW RESULT =====
+        function showResult(song) {
+            currentSong = song;
+
+            // Image (best quality)
+            const img = song.image?.find(i => i.quality === '500x500') || song.image?.[song.image.length - 1];
+            document.getElementById('rcImg').src = img?.link || '';
+
+            // Info
+            document.getElementById('rcTitle').textContent = song.name || 'Unknown';
+            document.getElementById('rcArtist').textContent = song.primaryArtists || 'Unknown';
+            document.getElementById('rcAlbum').textContent = '📀 ' + (song.album?.name || '—');
+            document.getElementById('rcDur').textContent = '⏱ ' + fmtDur(parseInt(song.duration) || 0);
+            document.getElementById('rcYear').textContent = '📅 ' + (song.year || '—');
+            document.getElementById('rcPlays').textContent = '▶ ' + formatPlays(song.playCount);
+
+            // Quality chips
+            const qBar = document.getElementById('qualityBar');
+            qBar.innerHTML = '';
+            const urls = song.downloadUrl || [];
+            urls.forEach((u, i) => {
+                const chip = document.createElement('button');
+                chip.className = 'q-chip' + (i === urls.length - 1 ? ' active' : '');
+                chip.textContent = u.quality;
+                chip.onclick = () => {
+                    document.querySelectorAll('.q-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    playAudio(u.link);
+                };
+                qBar.appendChild(chip);
+            });
+
+            // Auto-play highest quality
+            const best = urls[urls.length - 1];
+            if (best) playAudio(best.link);
+
+            document.getElementById('resultCard').classList.add('on');
+            document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            toast('🎵 Now Playing');
+        }
+
+        function playAudio(url) {
+            const player = document.getElementById('player');
+            player.src = url;
+            player.load();
+            player.play().catch(() => { });
+        }
+
+        function downloadSong() {
+            if (!currentSong) return;
+            const urls = currentSong.downloadUrl || [];
+            const best = urls[urls.length - 1];
+            if (best) {
+                const a = document.createElement('a');
+                a.href = best.link;
+                a.download = (currentSong.name || 'song') + '.mp4';
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                toast('✅ Download started — 320kbps!');
+            }
+        }
+
+        function copyLink() {
+            if (!currentSong) return;
+            const url = currentSong.url || '';
+            navigator.clipboard.writeText(url)
+                .then(() => toast('📋 Link copied!'))
+                .catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = url; document.body.appendChild(ta);
+                    ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    toast('📋 Link copied!');
+                });
+        }
+
+        // ===== HELPERS =====
+        function fmtDur(sec) {
+            if (!sec) return '0:00';
+            const m = Math.floor(sec / 60), s = sec % 60;
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+
+        function formatPlays(n) {
+            if (!n) return '—';
+            n = parseInt(n);
+            if (n >= 10000000) return (n / 10000000).toFixed(1) + ' Cr';
+            if (n >= 100000) return (n / 100000).toFixed(1) + ' L';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return n.toString();
+        }
+
+        function showErr(msg) {
+            const el = document.getElementById('err');
+            el.textContent = msg; el.classList.add('on');
+            setTimeout(() => el.classList.remove('on'), 6000);
+        }
+
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('on');
+            setTimeout(() => t.classList.remove('on'), 2500);
+        }
+    </script>
+</body>
+
+</html>
