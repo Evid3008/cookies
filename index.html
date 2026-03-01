@@ -676,6 +676,19 @@
             <button class="sbtn" id="go" onclick="doSearch()">Search</button>
         </div>
 
+        <div class="api-box">
+            <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                </svg> Telegram Bot API Endpoint</h4>
+            <div class="api-url-bar">
+                <code
+                    id="mockApiUrl">https://evid3008.github.io/cookies/?api=true&q=<span style="color:var(--pink)">{song_name}</span></code>
+                <button onclick="copyBaseApi()">Copy</button>
+            </div>
+            <p>Replace <code>{song_name}</code> and fetch this URL in your bot code to get 320kbps audio JSON.</p>
+        </div>
+
         <div class="err-msg" id="err"></div>
         <div class="ld-box" id="ldBox">
             <div class="spin"></div>
@@ -705,12 +718,13 @@
                             </svg>
                             Download 320kbps
                         </button>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                        </svg>
-                        Copy Link
+                        <button onclick="copyLink()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                            </svg>
+                            Copy Link
                         </button>
                         <button onclick="copyApiLink()"
                             style="background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.3); color: var(--cyan);">
@@ -734,19 +748,6 @@
             <div class="ico">🎶</div>
             <h3>Search for Music</h3>
             <p>Type a song name and press Search — instant result!</p>
-        </div>
-
-        <div class="api-box">
-            <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg> Telegram Bot API Endpoint</h4>
-            <div class="api-url-bar">
-                <code
-                    id="mockApiUrl">https://evid3008.github.io/cookies/?api=true&q=<span style="color:var(--pink)">{song_name}</span></code>
-                <button onclick="copyBaseApi()">Copy</button>
-            </div>
-            <p>Replace <code>{song_name}</code> and fetch this URL in your bot code to get 320kbps audio JSON.</p>
         </div>
     </div>
     <div class="toast" id="toast"></div>
