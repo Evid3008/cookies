@@ -747,6 +747,14 @@
             document.getElementById('err').classList.remove('on');
             document.getElementById('go').disabled = true;
 
+            // Stop current audio if playing to prevent background overlap
+            const player = document.getElementById('player');
+            if (player) {
+                player.pause();
+                player.removeAttribute('src'); // clear source
+                player.load();
+            }
+
             try {
                 const r = await fetch(`${API_BASE}/search/songs?query=${encodeURIComponent(query)}&limit=1`, {
                     signal: AbortSignal.timeout(5000)
@@ -794,25 +802,42 @@
                 chip.onclick = () => {
                     document.querySelectorAll('.q-chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
-                    playAudio(u.link);
+                    playAudio(u.link, true); // Keep time when switching quality
                 };
                 qBar.appendChild(chip);
             });
 
             // Auto-play highest quality
             const best = urls[urls.length - 1];
-            if (best) playAudio(best.link);
+            if (best) playAudio(best.link, false);
 
             document.getElementById('resultCard').classList.add('on');
             document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             toast('🎵 Now Playing');
         }
 
-        function playAudio(url) {
+        function playAudio(url, keepTime = false) {
             const player = document.getElementById('player');
+
+            // Save state for seamless switching
+            let currentTime = 0;
+            let wasPaused = player.paused;
+            if (keepTime) {
+                currentTime = player.currentTime;
+            }
+
             player.src = url;
             player.load();
-            player.play().catch(() => { });
+
+            // Restore timestamp
+            if (keepTime && currentTime > 0) {
+                player.currentTime = currentTime;
+            }
+
+            // Auto play if it's a new song, OR if the previous quality was actively playing
+            if (!keepTime || !wasPaused) {
+                player.play().catch(() => { });
+            }
         }
 
         function downloadSong() {
