@@ -554,6 +554,62 @@
             border-radius: 3px
         }
 
+        .api-box {
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: var(--r);
+            padding: 16px;
+            margin-top: 30px;
+        }
+
+        .api-box h4 {
+            color: var(--accent2);
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .api-url-bar {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--t1);
+        }
+
+        .api-url-bar code {
+            flex: 1;
+            padding: 10px 12px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .api-url-bar button {
+            background: var(--glass);
+            color: var(--t2);
+            border: none;
+            border-left: 1px solid var(--border);
+            padding: 0 14px;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .api-url-bar button:hover {
+            background: var(--soft);
+            color: var(--accent);
+        }
+
+        .api-box p {
+            color: var(--t3);
+            font-size: 11px;
+            margin-top: 8px;
+        }
+
         @media(max-width:640px) {
             .wrap {
                 padding: 12px
@@ -678,6 +734,19 @@
             <div class="ico">🎶</div>
             <h3>Search for Music</h3>
             <p>Type a song name and press Search — instant result!</p>
+        </div>
+
+        <div class="api-box">
+            <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                </svg> Telegram Bot API Endpoint</h4>
+            <div class="api-url-bar">
+                <code
+                    id="mockApiUrl">https://evid3008.github.io/cookies/?api=true&q=<span style="color:var(--pink)">{song_name}</span></code>
+                <button onclick="copyBaseApi()">Copy</button>
+            </div>
+            <p>Replace <code>{song_name}</code> and fetch this URL in your bot code to get 320kbps audio JSON.</p>
         </div>
     </div>
     <div class="toast" id="toast"></div>
@@ -928,6 +997,19 @@
                     ta.select(); document.execCommand('copy');
                     document.body.removeChild(ta);
                     toast('🚀 API Link copied!');
+                });
+        }
+
+        function copyBaseApi() {
+            const url = window.location.origin + window.location.pathname + '?api=true&q={song_name}';
+            navigator.clipboard.writeText(url)
+                .then(() => toast('🚀 Base API Link copied!'))
+                .catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = url; document.body.appendChild(ta);
+                    ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    toast('🚀 Base API Link copied!');
                 });
         }
 
