@@ -649,13 +649,21 @@
                             </svg>
                             Download 320kbps
                         </button>
-                        <button onclick="copyLink()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                        Copy Link
+                        </button>
+                        <button onclick="copyApiLink()"
+                            style="background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.3); color: var(--cyan);">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 18 22 12 16 6"></polyline>
+                                <polyline points="8 6 2 12 8 18"></polyline>
                             </svg>
-                            Copy Link
+                            Copy API Link
                         </button>
                     </div>
                 </div>
@@ -690,9 +698,47 @@
         let currentSong = null;
         let ytCookies = [];
 
-        // Init
-        document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
-        loadCookies();
+        // Check for API Mode first
+        const initUrlParams = new URLSearchParams(window.location.search);
+        if (initUrlParams.get('api') === 'true' && initUrlParams.get('q')) {
+            serveApi(initUrlParams.get('q'));
+        } else {
+            // Normal UI Init
+            document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+            loadCookies();
+        }
+
+        async function serveApi(query) {
+            document.body.innerHTML = '<div style="color:#fff;font-family:monospace;padding:20px;">Fetching...</div>';
+            try {
+                const r = await fetch(`${API_BASE}/search/songs?query=${encodeURIComponent(query)}&limit=1`, { signal: AbortSignal.timeout(6000) });
+                const json = await r.json();
+
+                let out = { success: false, error: "No results found" };
+
+                if (json.status === 'SUCCESS' && json.data?.results?.length > 0) {
+                    const s = json.data.results[0];
+                    const urls = s.downloadUrl || [];
+                    const best = urls[urls.length - 1];
+                    const img = s.image?.find(i => i.quality === '500x500') || s.image?.[s.image.length - 1];
+
+                    out = {
+                        success: true,
+                        title: s.name,
+                        artist: s.primaryArtists,
+                        album: s.album?.name,
+                        duration: s.duration,
+                        year: s.year,
+                        playCount: s.playCount,
+                        audio_url: best?.link,
+                        thumbnail: img?.link
+                    };
+                }
+                document.body.innerHTML = `<pre style="color:#fff;background:#000;margin:0;padding:20px;white-space:pre-wrap;word-break:break-all;">${JSON.stringify(out, null, 2)}</pre>`;
+            } catch (err) {
+                document.body.innerHTML = `<pre style="color:#f44;background:#000;margin:0;padding:20px;">{"success":false,"error":"${err.message}"}</pre>`;
+            }
+        }
 
         // ===== COOKIES =====
         async function loadCookies() {
@@ -867,6 +913,21 @@
                     ta.select(); document.execCommand('copy');
                     document.body.removeChild(ta);
                     toast('📋 Link copied!');
+                });
+        }
+
+        function copyApiLink() {
+            if (!currentSong || !currentSong.name) return;
+            // Generate the API link pointing directly to this GitHub Pages site
+            const url = window.location.origin + window.location.pathname + '?api=true&q=' + encodeURIComponent(currentSong.name);
+            navigator.clipboard.writeText(url)
+                .then(() => toast('🚀 API Link copied for your Bot!'))
+                .catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = url; document.body.appendChild(ta);
+                    ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    toast('🚀 API Link copied!');
                 });
         }
 
